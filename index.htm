@@ -1,53 +1,142 @@
-<script>
-const API_URL = "https://umeqamdream.vercel.app/analyze-dream";
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>UMEQAM — Dream Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-const button = document.querySelector("button");
-const textarea = document.querySelector("textarea");
-const resultBox = document.querySelector(".result");
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0e0e0e;
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
 
-button.addEventListener("click", async () => {
-  const dreamText = textarea.value.trim();
+    .app {
+      width: 100%;
+      max-width: 720px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
 
-  if (!dreamText) {
-    resultBox.innerHTML = "<p style='color:red'>Введите текст сна</p>";
-    return;
-  }
+    h1 {
+      margin-bottom: 16px;
+      font-size: 22px;
+      font-weight: 600;
+    }
 
-  resultBox.innerHTML = "⏳ Анализируем сон...";
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: none;
+      resize: vertical;
+      box-sizing: border-box;
+    }
 
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        dream_text: dreamText
-      })
+    button {
+      margin-top: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 600;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 24px;
+      line-height: 1.5;
+    }
+
+    img {
+      max-width: 100%;
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <h1>UMEQAM · Dream Analyzer</h1>
+
+    <textarea placeholder="Опишите сон одним текстом. Без анализа."></textarea>
+
+    <button>Анализировать</button>
+
+    <div class="result"></div>
+  </div>
+
+  <script>
+    const API_URL = "https://umeqamdream.vercel.app/analyze-dream";
+
+    const button = document.querySelector("button");
+    const textarea = document.querySelector("textarea");
+    const resultBox = document.querySelector(".result");
+
+    button.addEventListener("click", async () => {
+      const dreamText = textarea.value.trim();
+
+      if (!dreamText) {
+        resultBox.innerHTML = "<p style='color:#ff6b6b'>Введите текст сна.</p>";
+        return;
+      }
+
+      button.disabled = true;
+      resultBox.innerHTML = "⏳ Анализируем сон…";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            dream_text: dreamText
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("Ошибка сервера: " + response.status);
+        }
+
+        const data = await response.json();
+
+        let html = "";
+
+        if (data.analysis) {
+          html += "<h3>Анализ</h3><p>" + data.analysis + "</p>";
+        }
+
+        if (data.image_base64) {
+          html += "<h3>Образ</h3>";
+          html += "<img src='data:image/png;base64," + data.image_base64 + "' />";
+        }
+
+        resultBox.innerHTML = html || "<p>Нет данных</p>";
+      } catch (err) {
+        console.error(err);
+        resultBox.innerHTML = "<p style='color:#ff6b6b'>Ошибка запроса. Проверь backend.</p>";
+      } finally {
+        button.disabled = false;
+      }
     });
-
-    if (!response.ok) {
-      throw new Error("Ошибка сервера: " + response.status);
-    }
-
-    const data = await response.json();
-
-    let html = "";
-
-    if (data.analysis) {
-      html += `<h3>Анализ</h3><p>${data.analysis}</p>`;
-    }
-
-    if (data.image_base64) {
-      html += `<h3>Образ сна</h3>
-               <img src="data:image/png;base64,${data.image_base64}" style="max-width:100%;border-radius:12px;">`;
-    }
-
-    resultBox.innerHTML = html || "Нет данных";
-
-  } catch (err) {
-    console.error(err);
-    resultBox.innerHTML = "<p style='color:red'>Failed to fetch. Проверь backend.</p>";
-  }
-});
-</script>
+  </script>
+</body>
+</html>
