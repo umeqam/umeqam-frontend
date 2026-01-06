@@ -1,128 +1,186 @@
-<script>
-async function analyzeDream() {
-    const dream = document.getElementById('dreamText').value.trim();
-    const resultDiv = document.getElementById('result');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UMEQAM Dream Analyzer</title>
 
-    if (!dream) {
-        resultDiv.innerHTML = "<p>Please enter a dream description.</p>";
-        return;
-    }
-
-    resultDiv.innerHTML = "<p class='loading'>Analyzing dream…</p>";
-
-    try {
-        const response = await fetch("https://umeqam-dream.onrender.com/analyze-dream", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ dream_text: dream })
-        });
-
-        if (!response.ok) throw new Error("Service unavailable");
-
-        const data = await response.json();
-        renderResult(data);
-
-    } catch (e) {
-        // 🔒 LUXURY FALLBACK (лечит всё)
-        renderFallback(dream);
-    }
-}
-
-function renderResult(data) {
-    document.getElementById('result').innerHTML = `
-        <h2>Dream Analysis</h2>
-        <p><strong>Emotions:</strong> ${data.emotions}</p>
-        <p><strong>Symbols:</strong> ${data.symbols}</p>
-        <p><strong>Dynamics:</strong> ${data.dynamics}</p>
-        <p><strong>Context:</strong> ${data.context}</p>
-        <p><strong>Conclusion:</strong> ${data.conclusion}</p>
-    `;
-}
-
-function renderFallback(dream) {
-    document.getElementById('result').innerHTML = `
-        <h2>Dream Analysis</h2>
-        <p class="muted">
-            Analysis service is temporarily unavailable.<br>
-            The interface is functioning correctly.
-        </p>
-
-        <p><strong>Dream snapshot:</strong></p>
-        <p>${dream.slice(0, 180)}${dream.length > 180 ? "…" : ""}</p>
-
-        <p><em>This is a preview mode.</em></p>
-    `;
-}
-</script><script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    const textarea = document.getElementById("dreamText");
-    const resultDiv = document.getElementById("result");
-    const analyzeBtn = document.getElementById("analyzeBtn");
-
-    if (!textarea || !resultDiv || !analyzeBtn) {
-        console.error("Required DOM elements not found");
-        return;
-    }
-
-    analyzeBtn.addEventListener("click", analyzeDream);
-
-    async function analyzeDream() {
-        const dream = textarea.value.trim();
-
-        if (!dream) {
-            resultDiv.innerHTML = "<p>Please enter a dream description.</p>";
-            return;
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #1a1635, #0b0818 70%);
+            color: #f2f2ff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        resultDiv.innerHTML = "<p>Analyzing dream...</p>";
+        .app {
+            width: 100%;
+            max-width: 760px;
+            padding: 48px 32px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 28px;
+            box-shadow: 0 0 80px rgba(138, 43, 226, 0.15);
+            text-align: center;
+        }
 
-        try {
-            const response = await fetch("https://umeqam-dream.onrender.com/analyze-dream", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    dream_text: dream
-                })
-            });
+        h1 {
+            margin: 0 0 12px;
+            font-size: 42px;
+            letter-spacing: 0.5px;
+        }
 
-            if (!response.ok) {
-                throw new Error("Service unavailable");
+        .subtitle {
+            opacity: 0.8;
+            font-size: 18px;
+            margin-bottom: 32px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            resize: vertical;
+            border-radius: 20px;
+            border: 2px solid rgba(138, 43, 226, 0.6);
+            background: rgba(0, 0, 0, 0.35);
+            color: #ffffff;
+            padding: 18px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        button {
+            margin-top: 28px;
+            padding: 16px 42px;
+            font-size: 18px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, #8a2be2, #6a00ff);
+            color: #ffffff;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.6);
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        #result {
+            margin-top: 36px;
+            text-align: left;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        .muted {
+            opacity: 0.7;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 24px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <h1>UMEQAM Dream Analyzer</h1>
+        <div class="subtitle">
+            Ethical symbolic reflection. No diagnosis. No prediction.
+        </div>
+
+        <textarea
+            id="dreamText"
+            placeholder="I was walking through an empty city at night, searching for a door that kept disappearing..."
+        ></textarea>
+
+        <button id="analyzeBtn">Analyze Dream</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const textarea = document.getElementById("dreamText");
+            const result = document.getElementById("result");
+            const button = document.getElementById("analyzeBtn");
+
+            button.addEventListener("click", analyzeDream);
+
+            async function analyzeDream() {
+                const dream = textarea.value.trim();
+
+                if (!dream) {
+                    result.innerHTML = "<p>Please enter a dream description.</p>";
+                    return;
+                }
+
+                result.innerHTML = "<p class='loading'>Analyzing dream...</p>";
+
+                try {
+                    const response = await fetch(
+                        "https://umeqam-dream.onrender.com/analyze-dream",
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ dream_text: dream })
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("Service unavailable");
+                    }
+
+                    const data = await response.json();
+                    renderResult(data);
+
+                } catch (error) {
+                    renderFallback(dream);
+                }
             }
 
-            const data = await response.json();
-            renderResult(data);
+            function renderResult(data) {
+                result.innerHTML =
+                    "<h2>Dream Analysis</h2>" +
+                    "<div class='divider'></div>" +
+                    "<p><strong>Emotions:</strong> " + (data.emotions || "N/A") + "</p>" +
+                    "<p><strong>Symbols:</strong> " + (data.symbols || "N/A") + "</p>" +
+                    "<p><strong>Dynamics:</strong> " + (data.dynamics || "N/A") + "</p>" +
+                    "<p><strong>Context:</strong> " + (data.context || "N/A") + "</p>" +
+                    "<p><strong>Conclusion:</strong> " + (data.conclusion || "N/A") + "</p>";
+            }
 
-        } catch (err) {
-            renderFallback(dream);
-        }
-    }
+            function renderFallback(dream) {
+                const preview =
+                    dream.length > 180
+                        ? dream.slice(0, 180) + "..."
+                        : dream;
 
-    function renderResult(data) {
-        resultDiv.innerHTML =
-            "<h2>Dream Analysis</h2>" +
-            "<p><strong>Emotions:</strong> " + (data.emotions || "N/A") + "</p>" +
-            "<p><strong>Symbols:</strong> " + (data.symbols || "N/A") + "</p>" +
-            "<p><strong>Dynamics:</strong> " + (data.dynamics || "N/A") + "</p>" +
-            "<p><strong>Context:</strong> " + (data.context || "N/A") + "</p>" +
-            "<p><strong>Conclusion:</strong> " + (data.conclusion || "N/A") + "</p>";
-    }
-
-    function renderFallback(dream) {
-        const preview = dream.length > 180 ? dream.slice(0, 180) + "..." : dream;
-
-        resultDiv.innerHTML =
-            "<h2>Dream Analysis</h2>" +
-            "<p>Analysis service is temporarily unavailable.</p>" +
-            "<p>The interface is functioning correctly.</p>" +
-            "<p><strong>Dream snapshot:</strong></p>" +
-            "<p>" + preview + "</p>" +
-            "<p><em>Preview mode.</em></p>";
-    }
-
-});
-</script>
-
-
+                result.innerHTML =
+                    "<h2>Dream Analysis</h2>" +
+                    "<div class='divider'></div>" +
+                    "<p class='muted'>Analysis service is temporarily unavailable.</p>" +
+                    "<p class='muted'>The interface is functioning correctly.</p>" +
+                    "<p><strong>Dream snapshot:</strong></p>" +
+                    "<p>" + preview + "</p>" +
+                    "<p class='muted'><em>Preview mode.</em></p>";
+            }
+        });
+    </script>
+</body>
+</html>
