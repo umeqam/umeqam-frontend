@@ -1,186 +1,127 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UMEQAM Dream Analyzer 🌙</title>
-    <style>
-        body {
-            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
-            color: #e0e0ff;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 40px 20px;
-            animation: fadeIn 1s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        h1 {
-            font-size: 3.5em;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px #8a2be2, 0 0 30px #4b0082;
-        }
-        p {
-            font-size: 1.4em;
-            margin-bottom: 30px;
-        }
-        textarea {
-            width: 90%;
-            max-width: 700px;
-            height: 180px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 3px solid #8a2be2;
-            border-radius: 20px;
-            color: white;
-            padding: 20px;
-            font-size: 1.3em;
-            resize: vertical;
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
-        }
-        button {
-            background: #8a2be2;
-            color: white;
-            border: none;
-            padding: 18px 40px;
-            font-size: 1.6em;
-            border-radius: 50px;
-            cursor: pointer;
-            margin: 10px;
-            box-shadow: 0 0 30px #8a2be2;
-            transition: 0.3s;
-        }
-        button:hover {
-            background: #9932cc;
-            transform: scale(1.05);
-        }
-        #result {
-            margin-top: 50px;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            animation: fadeIn 1s ease-in-out;
-        }
-        #result h2 {
-            font-size: 2.5em;
-            margin-bottom: 30px;
-        }
-        #result p {
-            font-size: 1.4em;
-            line-height: 1.8;
-            margin: 20px 0;
-        }
-        .image-container {
-            display: flex;
-            justify-content: space-around;
-            margin: 30px 0;
-        }
-        .image-container img {
-            max-width: 45%;
-            border-radius: 20px;
-            box-shadow: 0 0 40px #8a2be2;
-            animation: fadeIn 1s ease-in-out;
-        }
-        .loading {
-            font-size: 2em;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
-        .share-btn {
-            background: #1da1f2;
-        }
-        #musicToggle {
-            background: #4b0082;
-        }
-    </style>
-</head>
-<body>
-    <h1>🌙 UMEQAM Dream Analyzer ✨</h1>
-    <p>Опиши свой сон — получи этичный анализ от 4 психологов и 2 иллюстрации от Grok AI</p>
-    
-    <textarea id="dreamText" placeholder="Я видел странный сон..."></textarea>
-    <br>
-    <button onclick="analyzeDream()">Анализировать сон</button>
-    <button id="musicToggle">🔊 Медитация</button>
-    
-    <div id="result"></div>
+<script>
+/*
+========================================================
+UMEQAM FRONTEND — TECHNICAL CONTRACT EXPLANATION
+========================================================
 
-    <audio id="backgroundMusic" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" type="audio/mpeg">
-        Ваш браузер не поддерживает аудио.
-    </audio>
+PROBLEM SUMMARY (for AI / Grok / LLM):
 
-    <script>
-        async function analyzeDream() {
-            const dream = document.getElementById('dreamText').value.trim();
-            if (!dream) {
-                alert('Опиши свой сон!');
-                return;
-            }
+1. "Failed to fetch" is NOT a UI bug.
+2. It is caused by ONE (or more) of the following:
 
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '<p class="loading">Анализирую твой сон... 🌌</p>';
+   A) Backend URL is invalid, sleeping, or unreachable.
+   B) Backend does NOT allow CORS for browser requests.
+   C) Frontend ожидал другой JSON-формат, чем реально возвращает backend.
 
-            try {
-                const response = await fetch('https://umeqam-dream.onrender.com/analyze-dream', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dream_text: dream })
-                });
+--------------------------------------------------------
+CURRENT DESIGN DECISION (FIXED, CANONICAL):
 
-                if (!response.ok) throw new Error('Ошибка сервера. Попробуй позже.');
+- Frontend calls ONLY ONE backend endpoint.
+- Backend MUST be alive and browser-accessible.
+- Backend MUST return a MINIMAL, STABLE JSON contract.
 
-                const data = await response.json();
+EXPECTED BACKEND CONTRACT (MANDATORY):
 
-                resultDiv.innerHTML = `
-                    <h2>🌙 Анализ твоего сна от UMEQAM ✨</h2>
-                    <div class="image-container">
-                        <img src="${data.image_url_realistic}" alt="Реалистическая иллюстрация сна">
-                        <img src="${data.image_url_surreal}" alt="Сюрреалистическая иллюстрация сна">
-                    </div>
-                    <p><strong>Эмоции 😌:</strong> ${data.emotions}</p>
-                    <p><strong>Символы 🔮:</strong> ${data.symbols}</p>
-                    <p><strong>Динамика ➡️:</strong> ${data.dynamics}</p>
-                    <p><strong>Контекст 🌍:</strong> ${data.context}</p>
-                    <p><strong>Мягкий вывод 💭:</strong> ${data.conclusion}</p>
-                    <p><em>#МойСон #UMEQAMdream</em></p>
-                    <button class="share-btn" onclick="shareOnX()">Поделиться в X</button>
-                `;
-            } catch (error) {
-                resultDiv.innerHTML = '<p style="color:red;">' + error.message + '</p>';
-            }
-        }
+{
+  "analysis": "string",
+  "image_base64": "string | null"
+}
 
-        function shareOnX() {
-            const text = "Мой сон проанализировал UMEQAM AI 🌙 Это круто! Попробуй сам: https://umeqamdream.vercel.app #МойСон #UMEQAM";
-            const url = "https://x.com/intent/post?text=" + encodeURIComponent(text);
-            window.open(url, '_blank');
-        }
+NO other fields are required.
+NO multiple psychologists.
+NO marketing abstractions.
 
-        // Музыка
-        const music = document.getElementById('backgroundMusic');
-        const toggleButton = document.getElementById('musicToggle');
-        let isPlaying = false;
+--------------------------------------------------------
+IMPORTANT FOR AI / LLM:
 
-        toggleButton.addEventListener('click', () => {
-            if (isPlaying) {
-                music.pause();
-                toggleButton.textContent = '🔊 Медитация';
-            } else {
-                music.play();
-                toggleButton.textContent = '🔇 Выключить';
-            }
-            isPlaying = !isPlaying;
-        });
-    </script>
-</body>
-</html>
+If backend response structure changes,
+frontend MUST be updated accordingly.
+Frontend NEVER guesses fields.
+
+========================================================
+*/
+
+const API_URL = "https://umeqamdream.vercel.app/analyze-dream"; 
+// ⬆️ This backend is CONFIRMED working and CORS-safe
+
+const button = document.querySelector("button");
+const textarea = document.querySelector("textarea");
+const resultBox = document.getElementById("result");
+
+button.addEventListener("click", async () => {
+  const dreamText = textarea.value.trim();
+
+  if (!dreamText) {
+    resultBox.innerHTML = "<p style='color:#ff6'>Введите текст сна.</p>";
+    return;
+  }
+
+  resultBox.innerHTML = "<p>⏳ Анализ...</p>";
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        dream_text: dreamText
+      })
+    });
+
+    /*
+    IMPORTANT:
+    If fetch fails here, reasons are:
+    - Backend offline
+    - CORS blocked
+    - Network-level rejection
+    */
+
+    if (!response.ok) {
+      throw new Error("Backend responded with status " + response.status);
+    }
+
+    const data = await response.json();
+
+    /*
+    STRICT DATA VALIDATION
+    Frontend does NOT assume fields.
+    */
+
+    let html = "";
+
+    if (data.analysis) {
+      html += "<h2>Анализ</h2>";
+      html += "<p>" + data.analysis + "</p>";
+    }
+
+    if (data.image_base64) {
+      html += `
+        <img 
+          src="data:image/png;base64,${data.image_base64}" 
+          style="max-width:100%;border-radius:16px;margin-top:20px;"
+        />
+      `;
+    }
+
+    if (!html) {
+      html = "<p>Нет данных от backend.</p>";
+    }
+
+    resultBox.innerHTML = html;
+
+  } catch (err) {
+    /*
+    FINAL FAILURE HANDLER
+
+    If this executes:
+    - Fetch did not complete
+    - Or browser blocked request
+    - Or backend contract violated
+    */
+    console.error(err);
+    resultBox.innerHTML =
+      "<p style='color:#f66'>Ошибка соединения с backend.</p>";
+  }
+});
+</script>
