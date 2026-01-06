@@ -53,4 +53,76 @@ function renderFallback(dream) {
         <p><em>This is a preview mode.</em></p>
     `;
 }
+</script><script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const textarea = document.getElementById("dreamText");
+    const resultDiv = document.getElementById("result");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+
+    if (!textarea || !resultDiv || !analyzeBtn) {
+        console.error("Required DOM elements not found");
+        return;
+    }
+
+    analyzeBtn.addEventListener("click", analyzeDream);
+
+    async function analyzeDream() {
+        const dream = textarea.value.trim();
+
+        if (!dream) {
+            resultDiv.innerHTML = "<p>Please enter a dream description.</p>";
+            return;
+        }
+
+        resultDiv.innerHTML = "<p>Analyzing dream...</p>";
+
+        try {
+            const response = await fetch("https://umeqam-dream.onrender.com/analyze-dream", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    dream_text: dream
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Service unavailable");
+            }
+
+            const data = await response.json();
+            renderResult(data);
+
+        } catch (err) {
+            renderFallback(dream);
+        }
+    }
+
+    function renderResult(data) {
+        resultDiv.innerHTML =
+            "<h2>Dream Analysis</h2>" +
+            "<p><strong>Emotions:</strong> " + (data.emotions || "N/A") + "</p>" +
+            "<p><strong>Symbols:</strong> " + (data.symbols || "N/A") + "</p>" +
+            "<p><strong>Dynamics:</strong> " + (data.dynamics || "N/A") + "</p>" +
+            "<p><strong>Context:</strong> " + (data.context || "N/A") + "</p>" +
+            "<p><strong>Conclusion:</strong> " + (data.conclusion || "N/A") + "</p>";
+    }
+
+    function renderFallback(dream) {
+        const preview = dream.length > 180 ? dream.slice(0, 180) + "..." : dream;
+
+        resultDiv.innerHTML =
+            "<h2>Dream Analysis</h2>" +
+            "<p>Analysis service is temporarily unavailable.</p>" +
+            "<p>The interface is functioning correctly.</p>" +
+            "<p><strong>Dream snapshot:</strong></p>" +
+            "<p>" + preview + "</p>" +
+            "<p><em>Preview mode.</em></p>";
+    }
+
+});
 </script>
+
+
